@@ -1,10 +1,11 @@
+import json
 from django.shortcuts import render
 import PyPDF2
 import openai
 from rest_framework.views import APIView
 from rest_framework.response import Response
 
-api_key = "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"
+api_key = "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"
 openai.api_key = api_key
 
 
@@ -26,7 +27,8 @@ def algorithm(job_title, job_qualifications, candidate1, candidate2):
     }
     """
     chatgpt_prompt = (
-        candidate1
+        "Ensure the candidates are related to the Job Title and Job Qualification. If not, make the qualifications percentage very low and, in comparison, not qualified for the job."
+        + candidate1
         + " compare to "
         + candidate2
         + " in the Position of: "
@@ -68,7 +70,9 @@ class PdfToJsonView(APIView):
             response_data = algorithm(
                 job_title, job_qualifications, candidate_text1, candidate_text2
             )
-            return Response(response_data, content_type="application/json")
+            cleaned_string = response_data.replace("\n", "")
+            json_object = json.loads(cleaned_string)
+            return Response(json_object, content_type="application/json")
         else:
             return Response(
                 {"error": "Both candidate1 and candidate2 PDF files must be uploaded."},

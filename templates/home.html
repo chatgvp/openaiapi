@@ -56,15 +56,27 @@
                                         accept=".pdf,.doc,.docx" />
                                 </div>
                                 <button type="submit" class="btn btn-primary">
-                                    Search
+                                    Analyze
                                 </button>
                             </form>
                         </div>
                     </div>
                 </div>
                 <div class="col-md-6">
-                    <div class="card mt-4">
-                        <div class="card-body" id="jsonContainer"></div>
+                    <div class="container">
+                        <div class="card-body" id="jsonContainer">
+                            <div class="card" id="cardCandidate1">
+                                <div class="card-body"></div>
+                            </div>
+                            <div class="card" id="cardCandidate2">
+                                <div class="card-body"></div>
+                            </div>
+                            <div class="card" id="Comparison">
+                                <div class="card-body">
+                                    <div></div>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
             </div>
@@ -73,6 +85,13 @@
     <script>
         $("#inputForm").submit(function (event) {
             event.preventDefault()
+            const searchButton = $("#inputForm button[type='submit']")
+            searchButton.prop("disabled", true)
+
+            searchButton.html(
+                `<span class="spinner-border spinner-border-sm" role="status" aria-hidden="true"></span> Analyzing...`
+            )
+
             var csrfToken = $("[name=csrfmiddlewaretoken]").val()
             var formData = new FormData()
             formData.append("csrfmiddlewaretoken", csrfToken)
@@ -82,7 +101,7 @@
             formData.append("job_qualifications", $("#jobQualification").val())
 
             $("#jsonContainer").empty() // Clear previous content
-
+            const jsonContainer = $("#jsonContainer")
             $.ajax({
                 url: "pdf-to-json/",
                 type: "POST",
@@ -90,12 +109,55 @@
                 processData: false,
                 contentType: false,
                 success: function (response) {
-                    var jsonString = JSON.stringify(response, null, 2)
-                    $("#jsonContainer").text(jsonString)
-                    console.log(jsonString)
+                    $("#jsonContainer").empty()
+                    for (let candidate in response) {
+                        if (candidate.startsWith("candidate")) {
+                            const candidateData = response[candidate]
+                            const card = $("<div>").addClass("card mb-3")
+
+                            const cardBody = $("<div>").addClass("card-body")
+                            const name = $("<h5>")
+                                .addClass("card-title")
+                                .text(candidateData.name)
+                            const strengths = $("<ul>").addClass("card-text")
+                            for (let strength of candidateData.strengths) {
+                                strengths.append($("<li>").text(strength))
+                            }
+                            const qualificationPercentage = $("<p>")
+                                .addClass("card-text")
+                                .text(
+                                    "Qualification Percentage: " +
+                                        candidateData.qualification_percentage
+                                )
+                            cardBody.append(
+                                name,
+                                strengths,
+                                qualificationPercentage
+                            )
+                            card.append(cardBody)
+
+                            $("#jsonContainer").append(card)
+                        }
+                    }
+
+                    const comparisonCard = $("<div>").addClass("card mb-3")
+                    const comparisonCardBody = $("<div>").addClass("card-body")
+                    const comparison = $("<p>")
+                        .addClass("card-text")
+                        .text(response.comparison)
+
+                    comparisonCardBody.append(comparison)
+                    comparisonCard.append(comparisonCardBody)
+                    $("#jsonContainer").append(comparisonCard)
+
+                    console.log(response)
+                    searchButton.html("Search")
+                    searchButton.prop("disabled", false)
                 },
                 error: function (xhr, status, error) {
                     console.error("Error occurred while fetching data:", error)
+                    searchButton.html("Search")
+                    searchButton.prop("disabled", false)
                 },
             })
         })
