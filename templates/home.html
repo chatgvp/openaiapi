@@ -9,6 +9,79 @@
             rel="stylesheet" />
         <script src="https://cdn.jsdelivr.net/npm/jquery@3.6.0/dist/jquery.min.js"></script>
         <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.0.2/dist/js/bootstrap.bundle.min.js"></script>
+        <style>
+            .glitch-wrapper {
+                        width: 100%;
+                        height: 100%;
+                        display: flex;
+                        align-items: center;
+                        justify-content: center;
+                        text-align: center;
+                        background-color: #ffffff;
+                    }
+
+                    .glitch {
+                        position: relative;
+                        {% comment %} font-size: 80px; {% endcomment %}
+                        font-weight: 700;
+                        line-height: 1.2;
+                        color: #000000;
+                        letter-spacing: 5px;
+                        z-index: 1;
+                    }
+
+                    .glitch:before,
+                    .glitch:after {
+                        display: block;
+                        content: attr(data-glitch);
+                        position: absolute;
+                        top: 0;
+                        left: 0;
+                        opacity: 0.8;
+                    }
+
+                    .glitch:before {
+                        animation: glitch-color 0.3s
+                            cubic-bezier(0.25, 0.46, 0.45, 0.94)
+                            both infinite;
+                        color: #00ffff;
+                        z-index: -1;
+                    }
+
+                    .glitch:after {
+                        animation: glitch-color 0.3s
+                            cubic-bezier(0.25, 0.46, 0.45, 0.94)
+                            reverse both infinite;
+                        color: #ff00ff;
+                        z-index: -2;
+                    }
+
+                    @keyframes glitch-color {
+                        0% {
+                            transform: translate(0);
+                        }
+
+                        20% {
+                            transform: translate(-3px, 3px);
+                        }
+
+                        40% {
+                            transform: translate(-3px, -3px);
+                        }
+
+                        60% {
+                            transform: translate(3px, 3px);
+                        }
+
+                        80% {
+                            transform: translate(3px, -3px);
+                        }
+
+                        to {
+                            transform: translate(0);
+                        }
+                    }
+        </style>
     </head>
     <body>
         <div class="container">
@@ -16,7 +89,18 @@
                 <div class="col-md-6">
                     <div class="card mt-4">
                         <div class="card-body">
-                            <h2 class="card-title"><b>Resume API</b></h2>
+                            <h2 class="card-title">
+                                <div class="glitch-wrapper">
+                                    <b>
+                                        <span
+                                            class="glitch"
+                                            data-glitch="ResumAI"
+                                            >ResumAI
+                                        </span>
+                                    </b>
+                                </div>
+                            </h2>
+                            <style></style>
                             <form id="inputForm" enctype="multipart/form-data">
                                 {% csrf_token %}
                                 <div class="mb-3">
@@ -45,7 +129,10 @@
                                         type="file"
                                         class="form-control"
                                         id="inputFileCandidate1"
-                                        accept=".pdf,.doc,.docx" />
+                                        accept=".pdf,.doc,.docx"
+                                        multiple />
+
+                                    {% comment %}
                                     <label for="input" class="form-label"
                                         >Enter Candidate #2 Resume</label
                                     >
@@ -54,6 +141,7 @@
                                         class="form-control"
                                         id="inputFileCandidate2"
                                         accept=".pdf,.doc,.docx" />
+                                    {% endcomment %}
                                 </div>
                                 <button type="submit" class="btn btn-primary">
                                     Analyze
@@ -68,9 +156,11 @@
                             <div class="card" id="cardCandidate1">
                                 <div class="card-body"></div>
                             </div>
+                            {% comment %}
                             <div class="card" id="cardCandidate2">
                                 <div class="card-body"></div>
                             </div>
+                            {% endcomment %}
                             <div class="card" id="Comparison">
                                 <div class="card-body">
                                     <div></div>
@@ -96,7 +186,7 @@
             var formData = new FormData()
             formData.append("csrfmiddlewaretoken", csrfToken)
             formData.append("candidate1", $("#inputFileCandidate1")[0].files[0])
-            formData.append("candidate2", $("#inputFileCandidate2")[0].files[0])
+            //formData.append("candidate2", $("#inputFileCandidate2")[0].files[0])
             formData.append("job_title", $("#jobTitle").val())
             formData.append("job_qualifications", $("#jobQualification").val())
 
@@ -114,7 +204,6 @@
                         if (candidate.startsWith("candidate")) {
                             const candidateData = response[candidate]
                             const card = $("<div>").addClass("card mb-3")
-
                             const cardBody = $("<div>").addClass("card-body")
                             const name = $("<h5>")
                                 .addClass("card-title")
@@ -139,12 +228,11 @@
                             $("#jsonContainer").append(card)
                         }
                     }
-
                     const comparisonCard = $("<div>").addClass("card mb-3")
                     const comparisonCardBody = $("<div>").addClass("card-body")
                     const comparison = $("<p>")
                         .addClass("card-text")
-                        .text(response.comparison)
+                        .text(response.summary)
 
                     comparisonCardBody.append(comparison)
                     comparisonCard.append(comparisonCardBody)
